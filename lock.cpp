@@ -6,11 +6,14 @@ using namespace std;
 
 void Source::push_(int val)
 {
+    while (capacity_ <= q.size()){};
+    
     q.push(val);
 };
 
 int Source::pop_()
 {
+    while(q.empty()){};
     if (!q.empty())
     {
         int val = q.front();
@@ -26,13 +29,18 @@ Source &Source::get_Instance_()
     return instance;
 };
 
-void Producer::produce_(int val)
+void Producer::produce_()
 {
-    cout << "生产者 " << this_thread::get_id() << " 生产了 :" << val << endl;
-    source_.push_(val);
+    for(int i = 0; i < 100; ++i) {
+        cout << "生产者 " << this_thread::get_id() << " 生产了 :" << i << endl;
+        source_.push_(i);
+    }
 }
 
 void Consumer::consume_()
 {
-    cout << "消费者 " << this_thread::get_id() << " 消费了 :" << source_.pop_() << endl;
+    for(int i = 0; i < 100; ++i) {
+        cout << "消费者 " << this_thread::get_id() << " 消费了 :" << source_.pop_() << endl;
+    
+    }
 }
