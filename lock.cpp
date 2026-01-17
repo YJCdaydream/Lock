@@ -6,33 +6,26 @@ using namespace std;
 
 bool Source::push_(int val)
 {
-    mtx_.lock();
+    unique_lock<mutex> lck(mtx_);
+    cv_not_full_.wait(lck, [this](){ return q.size() < capacity_; });
 
-    // while(q.size() >= capacity_){};
-    if(q.size() >= capacity_){
-        mtx_.unlock();
-        return false; // queue full
-    }
     q.push(val);
-    mtx_.unlock();
+    
+    cv_not_empty_.notify_one();
     return true;
 };
 
 int Source::pop_()
 {
-    mtx_.lock();
+    unique_lock<mutex> lck(mtx_);
+    cv_not_empty_.wait(lck, [this](){ return !q.empty(); });
 
-    // while(q.empty()){};
+    int val = q.front();
+    q.pop();
 
-    if (!q.empty())
-    {
-        int val = q.front();
-        q.pop();
-        mtx_.unlock();
-        return val;
-    }
-    mtx_.unlock();
-    return -1; // or throw an exception
+    cv_not_full_.notify_one();
+    return val;
+
 };
 
 Source &Source::get_Instance_()

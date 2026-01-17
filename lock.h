@@ -1,5 +1,6 @@
 #include <queue>
 #include <mutex>
+#include <condition_variable>
 
 class Source
 {
@@ -7,6 +8,8 @@ private:
     std::queue<int> q;
     int capacity_ = 30;
     std::mutex mtx_;
+    std::condition_variable cv_not_full_;   
+    std::condition_variable cv_not_empty_;
 
 public:
     bool push_(int val);
