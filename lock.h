@@ -1,12 +1,15 @@
 #include <queue>
+#include <mutex>
 
 class Source
 {
 private:
     std::queue<int> q;
+    int capacity_ = 30;
+    std::mutex mtx_;
 
 public:
-    void push_(int val);
+    bool push_(int val);
     int pop_();
     static Source &get_Instance_();
 
@@ -20,7 +23,6 @@ class Consumer
 {
 private:
     Source &source_;
-    
 
 public:
     Consumer(Source &src) : source_(src) {};
@@ -33,6 +35,6 @@ private:
     Source &source_;
 
 public:
-    Producer(Source &src) : source_(src) {}; 
-    void produce_(int val);
+    Producer(Source &src) : source_(src) {};
+    void produce_();
 };

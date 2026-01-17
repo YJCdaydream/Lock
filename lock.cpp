@@ -4,22 +4,34 @@
 
 using namespace std;
 
-void Source::push_(int val)
+bool Source::push_(int val)
 {
-    while (capacity_ <= q.size()){};
-    
+    mtx_.lock();
+
+    // while(q.size() >= capacity_){};
+    if(q.size() >= capacity_){
+        mtx_.unlock();
+        return false; // queue full
+    }
     q.push(val);
+    mtx_.unlock();
+    return true;
 };
 
 int Source::pop_()
 {
-    while(q.empty()){};
+    mtx_.lock();
+
+    // while(q.empty()){};
+
     if (!q.empty())
     {
         int val = q.front();
         q.pop();
+        mtx_.unlock();
         return val;
     }
+    mtx_.unlock();
     return -1; // or throw an exception
 };
 
@@ -32,15 +44,26 @@ Source &Source::get_Instance_()
 void Producer::produce_()
 {
     for(int i = 0; i < 100; ++i) {
-        cout << "生产者 " << this_thread::get_id() << " 生产了 :" << i << endl;
-        source_.push_(i);
+        if(source_.push_(i)) {
+            // successfully pushed
+            cout << "生产者 " << this_thread::get_id() << " 放入队列 :" << i << endl;
+        } else {
+            // failed to push, maybe queue is full
+            cout << "生产者 " << this_thread::get_id() << " 队列已满，未能放入 :" << i << endl;
+        };
     }
 }
 
 void Consumer::consume_()
 {
     for(int i = 0; i < 100; ++i) {
-        cout << "消费者 " << this_thread::get_id() << " 消费了 :" << source_.pop_() << endl;
-    
+        int d = source_.pop_();
+        if(d == -1) {
+            // queue empty
+            cout << "消费者 " << this_thread::get_id() << " 队列为空，未能消费" << endl;
+        } else {
+            // successfully popped
+            cout << "消费者 " << this_thread::get_id() << " 消费了 :" << d << endl;
+        }
     }
 }
