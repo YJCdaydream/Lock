@@ -5,16 +5,16 @@ using namespace std;
 
 int main()
 {
-
-    Producer p1(Source::get_Instance_());
-    Consumer c1(Source::get_Instance_());
+    Source<int> src;
+    Producer<int> p1(src);
+    Consumer<int> c1(src);
 
     thread producer_tds[4];
     thread consume_tds[4];
 
     for(int i = 0; i < 4; ++i) {
-        producer_tds[i] = thread(&Producer::produce_, &p1); 
-        consume_tds[i] = thread(&Consumer::consume_, &c1); 
+        producer_tds[i] = thread(&Producer<int>::produce_, &p1); 
+        consume_tds[i] = thread(&Consumer<int>::consume_, &c1); 
     }
     for(int i = 0; i < 4; ++i) {
         producer_tds[i].join();
