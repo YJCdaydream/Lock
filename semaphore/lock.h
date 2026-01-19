@@ -11,6 +11,7 @@ class Source
 {
 private:
     std::queue<T> q;
+    std::mutex mtx_; // 新增互斥锁
     int capacity_ = 30;
     counting_semaphore<30> empty_{30};
     counting_semaphore<30> full_{0};
@@ -51,7 +52,10 @@ template <typename T>
 bool Source<T>::push_(const T &val)
 {
     empty_.acquire();
-    q.push(val);
+    {
+        std::lock_guard<std::mutex> lk(mtx_);
+        q.push(val);
+    }
     full_.release();
     return true;
 };
@@ -60,9 +64,12 @@ template <typename T>
 T Source<T>::pop_()
 {
     full_.acquire();
-    T val = q.front();
-    q.pop();
-
+    T val;
+    {
+        std::lock_guard<std::mutex> lk(mtx_);
+        val = q.front();
+        q.pop();
+    }
     empty_.release();
 
     return val;
@@ -73,9 +80,12 @@ std::shared_ptr<T> Source<T>::pop_and_wait_()
 {
     full_.acquire();
 
-    std::shared_ptr<T> ptr = std::make_shared<T>(q.front());
-    q.pop();
-
+    std::shared_ptr<T> ptr;
+    {
+        std::lock_guard<std::mutex> lk(mtx_);
+        ptr = std::make_shared<T>(q.front());
+        q.pop();
+    }
     empty_.release();
     return ptr;
 }
